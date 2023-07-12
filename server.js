@@ -6,6 +6,12 @@ const connectDB = require("./config/db");
 const errorHandler = require('./middlewares/error');
 const fileupload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
+const xxs = require('xss-clean');
+const rateLimit= require('express-rate-limit');
+const hpp = require('hpp');
+const cors = require('cors');
 
 // Route files
 const bootcamps = require('./routes/bootcamps');
@@ -35,6 +41,29 @@ app.use(cookieParser());
 
 // File uploading
 app.use(fileupload());
+
+// Sanitize data (Securing the platform)
+app.use(mongoSanitize());
+
+// Set security headers
+app.use(helmet());
+
+// Prevent cross site scripting (XSS) attacks
+app.use(xss());
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, //10 mins
+    max: 100
+});
+
+app.use(limiter);
+
+// Prevent Param Pollution
+app.use(hpp());
+
+// Enable CoRS
+app.use(cors()); 
 
 // Set Static folder for uploads
 app.use(express.static(path.join(__dirname, 'public')));
